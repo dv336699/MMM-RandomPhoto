@@ -1,13 +1,13 @@
 /* global Module */
 
 /* Magic Mirror
- * Module: MMM-Photos
+ * Module: MMM-RandomPhoto
  *
  * By Diego Vieira <diego@protos.inf.br>
  * ICS Licensed.
  */
 
-Module.register("MMM-Photos",{
+Module.register("MMM-RandomPhoto",{
 	defaults: {
 		opacity: 0.3,
 		animationSpeed: 500,
