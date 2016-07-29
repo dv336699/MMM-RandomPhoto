@@ -22,20 +22,20 @@ Module.register("MMM-RandomPhoto",{
 	load: function() {
 		var self = this;
 
-		var url = self.config.url + '&' + (new Date().getTime());
+		var url = self.config.url + (self.config.url.indexOf('?') > -1 ? '&' : '?') + (new Date().getTime());
 		var img = $('<img />').attr('src', url);
 
 		img.on('load', function() {
 				$('#mmm-photos-placeholder1').attr('src', url).animate({
 					opacity: self.config.opacity
 				}, self.config.animationSpeed, function() {
-					$(this).attr('id', 'photos-placeholder2');
+					$(this).attr('id', 'mmm-photos-placeholder2');
 				});
 
 				$('#mmm-photos-placeholder2').animate({
 					opacity: 0
 				}, self.config.animationSpeed, function() {
-					$(this).attr('id', 'photos-placeholder1');
+					$(this).attr('id', 'mmm-photos-placeholder1');
 				});
 
 				setTimeout(function() {
