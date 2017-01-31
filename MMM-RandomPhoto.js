@@ -37,11 +37,12 @@ Module.register("MMM-RandomPhoto",{
 				}, self.config.animationSpeed, function() {
 					$(this).attr('id', 'mmm-photos-placeholder1');
 				});
-
-				setTimeout(function() {
-					self.load();
-				}, (self.config.updateInterval * 1000));
 		});
+
+		setTimeout(function() {
+			self.load();
+		}, (self.config.updateInterval * 1000));
+		
 	},
 
 	getDom: function() {
