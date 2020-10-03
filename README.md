@@ -21,6 +21,7 @@ The entry in `config.js` can include the following options:
 |`grayscale`|Should the image be grayscaled? <br><br>**Type:** `boolean`<br>Default `false`|
 |`blur`|Should the image be blurred? <br><br>**Type:** `boolean`<br>Default `false`|
 |`blurAmount`|If you want to blur it, how much? Allows a number between `1` and `10`.<br><br>**Type:** `int`<br>Default `1`|
+|`startHidden`|Should the module start hidden?<br>Helpful if you use it as a "screensaver"<br><br>**Type:** `boolean`<br>Default `false`|
 
 Here is an example of an entry in `config.js`
 ```
@@ -34,9 +35,20 @@ Here is an example of an entry in `config.js`
         width: 1920,
         height: 1080,
         grayscale: true,
+        startHidden: true,
     }
 },
 ```
+
+## Notifications
+You can control this module by sending a `RANDOMPHOTO_NEXT` notification.
+If you do, the next image will bo shown and the updateInterval starts from 0
+
+## Ideas
+Thinking about implementing the following things:
+- possibility to show the user comment from each image on screen (target selectable)
+- possibility to stop and resume the automated slideshow (show icon indicator somewhere: pause / play)
+- ...
 
 ## Dependencies
 - [jquery](https://www.npmjs.com/package/jquery) (installed via `npm install`)

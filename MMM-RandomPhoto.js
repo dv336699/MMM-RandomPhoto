@@ -19,41 +19,46 @@ Module.register("MMM-RandomPhoto",{
         grayscale: false,
         blur: false,
         blurAmount: 1, // between 1 and 10
+        startHidden: false,
     },
 
     start: function() {
         this.updateTimer = null;
-        this.load();
+        if(this.config.startHidden) {
+            this.hide();
+        } else {
+            this.load();
+        }
     },
 
     load: function() {
         var self = this;
 
         var url = self.config.url + self.config.width + "/" + self.config.height + "/"
-        if(grayscale) {
+        if(self.config.grayscale) {
             url = url + (url.indexOf('?') > -1 ? '&' : '?') + "grayscale";
         }
-        if(blur) {
+        if(self.config.blur) {
             url = url + (url.indexOf('?') > -1 ? '&' : '?') + "blur";
-            if(blurAmount > 1) {
-                if(blurAmount > 10) { blurAmount = 10; }
-                url = url + "=" + blurAmount;
+            if(self.config.blurAmount > 1) {
+                if(self.config.blurAmount > 10) { self.config.blurAmount = 10; }
+                url = url + "=" + self.config.blurAmount;
             }
         }
         url = url + (url.indexOf('?') > -1 ? '&' : '?') + (new Date().getTime());
         var img = $('<img />').attr('src', url);
 
         img.on('load', function() {
-                $('#mmm-photos-placeholder1').attr('src', url).animate({
+                $('#randomPhoto-placeholder1').attr('src', url).animate({
                     opacity: self.config.opacity
                 }, self.config.animationSpeed, function() {
-                    $(this).attr('id', 'mmm-photos-placeholder2');
+                    $(this).attr('id', 'randomPhoto-placeholder2');
                 });
 
-                $('#mmm-photos-placeholder2').animate({
+                $('#randomPhoto-placeholder2').animate({
                     opacity: 0
                 }, self.config.animationSpeed, function() {
-                    $(this).attr('id', 'mmm-photos-placeholder1');
+                    $(this).attr('id', 'randomPhoto-placeholder1');
                 });
         });
 
@@ -66,7 +71,7 @@ Module.register("MMM-RandomPhoto",{
     getDom: function() {
         var wrapper = document.createElement("div");
         wrapper.id = "randomPhoto";
-        wrapper.innerHTML = '<img id="mmm-photos-placeholder1" /><img id="mmm-photos-placeholder2" />';
+        wrapper.innerHTML = '<img id="randomPhoto-placeholder1" /><img id="randomPhoto-placeholder2" />';
         return wrapper;
     },
 
@@ -74,7 +79,7 @@ Module.register("MMM-RandomPhoto",{
         return [
             this.file('node_modules/jquery/dist/jquery.min.js')
         ]
-    }
+    },
 
     getStyles: function() {
         return [
@@ -82,11 +87,21 @@ Module.register("MMM-RandomPhoto",{
         ];
     },
 
-    socketNotificationReceived: function(notification, payload) {
-        if (notification === "RANDOMPHOTO_NEXT"){
+    notificationReceived: function(notification, payload, sender) {
+        if (notification === "RANDOMPHOTO_NEXT") {
             clearTimeout(this.updateTimer);
             this.load();
         }
+    },
+
+    suspend: function() {
+        Log.info(this.name + ": suspending");
+        clearTimeout(this.updateTimer);
+    },
+
+     resume: function() {
+        Log.info(this.name + ": resuming");
+        this.load();
     }
 
 });
