@@ -1,11 +1,8 @@
-# No support
-I don't support this module anymore. Few free to fork and modify it if you want to use it or fork another fork.
-
 # MMM-RandomPhoto
 This a module for the [MagicMirror](https://github.com/MichMich/MagicMirror). It will show a random photo from an url.
 
 ## Installation
-1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/diego-vieira/MMM-RandomPhoto.git`.
+1. Navigate into your MagicMirror's `modules` folder and execute `git clone https://github.com/skuethe/MMM-RandomPhoto.git`.
 2. cd `cd MMM-RandomPhoto`
 3. Execute `npm install` to install the node dependencies.
 
@@ -15,22 +12,29 @@ The entry in `config.js` can include the following options:
 
 |Option|Description|
 |---|---|
-|`opacity`|The opacity of the image.<br><br>**Type:** `double`<br>Default 0.3|
-|`animationSpeed`|How long the fade out and fade in of photos should take.<br><br>**Type:** `int`<br>Default 500|
-|`updateInterval`|How long before getting a new image.<br><br>**Type:** `int`<br>Default 60 seconds|
-|`url`|URL to pull a new image from.<br><br>**Type:** `string`<br>Default https://unsplash.it/1920/1080/?random|
+|`opacity`|The opacity of the image.<br><br>**Type:** `double`<br>Default `0.3`|
+|`animationSpeed`|How long the fade out and fade in of photos should take.<br><br>**Type:** `int`<br>Default `500`|
+|`updateInterval`|How long before getting a new image.<br><br>**Type:** `int`<br>Default `60` seconds|
+|`url`|URL to pull a new image from.<br><br>**Type:** `string`<br>Default `https://picsum.photos/`|
+|`width`|The width of the image.<br><br>**Type:** `int`<br>Default `1920` px|
+|`height`|The height of the image.<br><br>**Type:** `int`<br>Default `1080` px|
+|`grayscale`|Should the image be grayscaled? <br><br>**Type:** `boolean`<br>Default `false`|
+|`blur`|Should the image be blurred? <br><br>**Type:** `boolean`<br>Default `false`|
+|`blurAmount`|If you want to blur it, how much? Allows a number between `1` and `10`.<br><br>**Type:** `int`<br>Default `1`|
 
 Here is an example of an entry in `config.js`
 ```
 {
-	module: 'MMM-RandomPhoto',
-	position: 'fullscreen_below',
-	config: {
-		opacity: 0.3,
-		animationSpeed: 500,
-		updateInterval: 60,
-		url: 'https://unsplash.it/1920/1080/?random'
-	}
+    module: 'MMM-RandomPhoto',
+    position: 'fullscreen_below',
+    config: {
+        opacity: 0.3,
+        animationSpeed: 500,
+        updateInterval: 60,
+        width: 1920,
+        height: 1080,
+        grayscale: true,
+    }
 },
 ```
 
@@ -39,3 +43,4 @@ Here is an example of an entry in `config.js`
 
 ## Special Thanks
 - [Michael Teeuw](https://github.com/MichMich) for creating the awesome [MagicMirror2](https://github.com/MichMich/MagicMirror) project that made this module possible.
+- [Diego Vieira](https://github.com/diego-vieira) for [initially](https://github.com/diego-vieira/MMM-RandomPhoto) creating this module.
