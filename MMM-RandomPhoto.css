@@ -9,19 +9,19 @@
     position: absolute;
 }
 
-#randomPhotoIcon.top {
+#randomPhotoIcon.rpitop {
     top: 5px;
 }
 
-#randomPhotoIcon.bottom {
+#randomPhotoIcon.rpibottom {
     bottom: 5px;
 }
 
-#randomPhotoIcon.right {
+#randomPhotoIcon.rpiright {
     right: 10px;
 }
 
-#randomPhotoIcon.left {
+#randomPhotoIcon.rpileft {
     left: 10px;
 }
 

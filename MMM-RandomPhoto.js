@@ -87,7 +87,7 @@ Module.register("MMM-RandomPhoto",{
                 self.load();
             }, (this.config.updateInterval * 1000));
         }
-},
+    },
 
     loadIcon: function() {
         var pauseIcon = document.getElementById("randomPhotoIconPause");
@@ -120,8 +120,10 @@ Module.register("MMM-RandomPhoto",{
             }
             var statusIconObject = document.createElement("span");
             statusIconObject.id = "randomPhotoIcon";
-            statusIconObject.className = this.config.statusIconPosition.replace("_", " ");
             statusIconObject.classList.add("dimmed");
+            this.config.statusIconPosition.split("_").forEach(function(extractedName) {
+                statusIconObject.classList.add("rpi" + extractedName);
+            });
             statusIconObject.innerHTML = '<i id="randomPhotoIconPause" class="fa fa-pause-circle hidden"></i><i id="randomPhotoIconPlay" class="fa fa-play-circle hidden"></i>';
             wrapper.appendChild(statusIconObject);
         }
@@ -144,7 +146,7 @@ Module.register("MMM-RandomPhoto",{
     notificationReceived: function(notification, payload, sender) {
         if (notification === "MODULE_DOM_CREATED") {
             if (this.config.startHidden) {
-                this.hide()
+                this.hide();
             } else {
                 this.resumeImageLoading();
             }
