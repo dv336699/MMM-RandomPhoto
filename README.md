@@ -22,6 +22,9 @@ The entry in `config.js` can include the following options:
 |`blur`|Should the image be blurred? <br><br>**Type:** `boolean`<br>Default `false`|
 |`blurAmount`|If you want to blur it, how much? Allows a number between `1` and `10`.<br><br>**Type:** `int`<br>Default `1`|
 |`startHidden`|Should the module start hidden?<br>Helpful if you use it as a "screensaver"<br><br>**Type:** `boolean`<br>Default `false`|
+|`showStatusIcon`|Do you want to see the status of automatic image loading ("play" / "paused")?<br><br>**Type:** `boolean`<br>Default `true`|
+|`statusIconMode`|Do you want to display the icon all the time or just fade in and out on status change?<br><br>**Type:** `string`<br>Possible values: `show` and `fade`<br>Default `show`|
+|`statusIconPosition`|Where do you want to display the status icon?<br><br>**Type:** `string`<br>Possible values: `top_right`, `top_left`, `bottom_right` and `bottom_left`<br>Default `top_right`|
 
 Here is an example of an entry in `config.js`
 ```
@@ -36,18 +39,27 @@ Here is an example of an entry in `config.js`
         height: 1080,
         grayscale: true,
         startHidden: true,
+        showStatusIcon: true,
+        statusIconMode: "show",
+        statusIconPosition: "top_right",
     }
 },
 ```
 
 ## Notifications
-You can control this module by sending a `RANDOMPHOTO_NEXT` notification.
-If you do, the next image will bo shown and the updateInterval starts from 0
+You can control this module by sending specific notifications.
+See the following list:
+
+|Notification|Description|
+|---|---|
+|`RANDOMPHOTO_NEXT`|Don't wait for `updateInterval` to trigger and immidiately show the next image<br>Respects the current state of automatic image loading|
+|`RANDOMPHOTO_TOGGLE`|Toggle the state of automatic image loading|
+|`RANDOMPHOTO_PAUSE`|Pause the loading of new images|
+|`RANDOMPHOTO_RESUME`|Resume the loading of new images|
 
 ## Ideas
 Thinking about implementing the following things:
 - possibility to show the user comment from each image on screen (target selectable)
-- possibility to stop and resume the automated slideshow (show icon indicator somewhere: pause / play)
 - ...
 
 ## Dependencies
