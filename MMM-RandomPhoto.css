@@ -1,8 +1,23 @@
+:root {
+    --blur-value: 0px;
+}
+
 #randomPhoto img {
     opacity: 0;
     position: absolute;;
     top: 0;
     left: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+#randomPhoto img.grayscale {
+    filter: grayscale(100%);
+}
+
+#randomPhoto img.blur {
+    filter: blur(var(--blur-value));
 }
 
 #randomPhotoIcon {
