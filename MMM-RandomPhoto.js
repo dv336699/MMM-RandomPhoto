@@ -13,14 +13,16 @@ Module.register("MMM-RandomPhoto",{
         opacity: 0.3,
         animationSpeed: 500,
         updateInterval: 60,
-        imageRepository: "picsum", // Select the image repository source. One of "picsum" (default / fallback) or "nextcloud"
+        imageRepository: "picsum", // Select the image repository source. One of "picsum" (default / fallback), "localdirectory" or "nextcloud" (currently broken because of CORS bug in nextcloud)
         repositoryConfig: {
-            // if imageRepository = "picsum" -> "url", "username" and "password" are ignored and can be left empty
+            // if imageRepository = "picsum" -> "path", "username" and "password" are ignored and can be left empty
             // if imageRepository = "nextcloud"
-            //  -> "url" will point to your image directory, f.e.: "https://YOUR.NEXTCLOUD.HOST/remote.php/dav/files/USERNAME/PATH/TO/DIRECTORY/"
+            //  -> "path" will point to your image directory URL, f.e.: "https://YOUR.NEXTCLOUD.HOST/remote.php/dav/files/USERNAME/PATH/TO/DIRECTORY/"
             //  -> if the share is private / internally shared only, add "username" and "password" for basic authentication. See documentation on how to create an "device" password:
             //     https://docs.nextcloud.com/server/latest/user_manual/en/session_management.html#managing-devices
-            url: "https://picsum.photos/",
+            // if imageRepository = "localdirectory"
+            //  -> "path" will point to your local directory, f.e.: "~/someReallyCoolPictures", "username" and "password" are ignored
+            path: "https://picsum.photos/",
             username: "",
             password: "",
         },
@@ -41,26 +43,40 @@ Module.register("MMM-RandomPhoto",{
         this.imageList = null; // used for nextcloud image url list
         this.currentImageIndex = 0; // used for nextcloud image url list
         this.running = false;
-        if (this.config.imageRepository.toLowerCase() === "nextcloud") {
+
+        this.nextcloud = false;
+        this.localdirectory = false;
+
+        this.config.imageRepository = this.config.imageRepository.toLowerCase();
+        if (this.config.imageRepository === "nextcloud") {
+            this.nextcloud = true;
+        } else if (this.config.imageRepository === "localdirectory") {
+            this.localdirectory = true;
+        }
+
+        // Set blur amount to a max of 10px
+        if(this.config.blurAmount > 10) { this.config.blurAmount = 10; }
+
+        if (this.nextcloud || this.localdirectory) {
             this.sendSocketNotification('SET_CONFIG', this.config);
-            this.useNextCloud();
+            this.fetchImageList();
         } else {
             // picsum -> force URL
-            this.config.repositoryConfig.url = "https://picsum.photos/";
+            Log.log(this.name + " --- DEBUG ---: using picsum");
+            this.config.repositoryConfig.path = "https://picsum.photos/";
             this.sendSocketNotification('SET_CONFIG', this.config);
         }
     },
 
-    useNextCloud: function() {
-        if (typeof this.config.repositoryConfig.url !== "undefined" && this.config.repositoryConfig.url !== null) {
-            this.sendSocketNotification('FETCH_NEXTCLOUD_IMAGE_LIST');
+    fetchImageList: function() {
+        if (typeof this.config.repositoryConfig.path !== "undefined" && this.config.repositoryConfig.path !== null) {
+            this.sendSocketNotification('FETCH_IMAGE_LIST');
         } else {
-            Log.error("[" + this.name + "] Trying to use 'nextcloud' but did not specify any URL.");
+            Log.error("[" + this.name + "] Trying to use 'nextcloud' or 'localdirectory' but did not specify any 'config.repositoryConfig.path'.");
         }
     },
 
     pauseImageLoading: function() {
-        Log.log(this.name + ": pausing");
         clearTimeout(this.updateTimer);
         this.running = false;
         if (this.config.showStatusIcon) {
@@ -69,7 +85,6 @@ Module.register("MMM-RandomPhoto",{
     },
 
     resumeImageLoading: function() {
-        Log.log(this.name + ": resuming");
         if (!this.running) {
             this.running = true;
             this.load();
@@ -83,20 +98,30 @@ Module.register("MMM-RandomPhoto",{
         var self = this;
         var url = "";
 
-        if (self.config.imageRepository.toLowerCase() === "nextcloud") {
+        if (self.localdirectory || self.nextcloud) {
             if (self.imageList && self.imageList.length > 0) {
-                url = this.returnImageFromList();
-                if (self.config.repositoryConfig.username && self.config.repositoryConfig.password) {
-                    // basic auth data set, special handling required
-                    url = this.retrieveImageBehindBasicAuth(url);
-                }
-            }
-            if (!url) {
+                url = "/" + this.name + "/images/" + this.returnImageFromList();
+                
+                jQuery.ajax({
+                    method: "GET",
+                    url: url,
+                })
+                .done(function (data) {
+                    self.smoothImageChange(data);
+                })
+                .fail(function( jqXHR, textStatus ) {
+                    Log.error("[" + self.name + "] Request failed: " + textStatus);
+                    console.dir(jqXHR);
+                    return false;
+                });
+
+            } else {
+                Log.error("[" + self.name + "] No images to display. 'this.imageList': " + self.imageList);
                 return false;
             }
         } else {
             // picsum default / fallback
-            url = self.config.repositoryConfig.url + self.config.width + "/" + self.config.height + "/"
+            url = self.config.repositoryConfig.path + self.config.width + "/" + self.config.height + "/"
             if(self.config.grayscale) {
                 url = url + (url.indexOf('?') > -1 ? '&' : '?') + "grayscale";
             }
@@ -108,22 +133,8 @@ Module.register("MMM-RandomPhoto",{
                 }
             }
             url = url + (url.indexOf('?') > -1 ? '&' : '?') + (new Date().getTime());
+            self.smoothImageChange(url);
         }
-        var img = $('<img />').attr('src', url);
-
-        img.on('load', function() {
-                $('#randomPhoto-placeholder1').attr('src', url).animate({
-                    opacity: self.config.opacity
-                }, self.config.animationSpeed, function() {
-                    $(this).attr('id', 'randomPhoto-placeholder2');
-                });
-
-                $('#randomPhoto-placeholder2').animate({
-                    opacity: 0
-                }, self.config.animationSpeed, function() {
-                    $(this).attr('id', 'randomPhoto-placeholder1');
-                });
-        });
 
         // Only activate re-loading itself, if we are not in "pause" state
         if (this.running) {
@@ -133,15 +144,35 @@ Module.register("MMM-RandomPhoto",{
         }
     },
 
+    smoothImageChange: function(url) {
+        var self = this;
+        var img = $('<img />').attr('src', url);
+        img.on('load', function() {
+            $('#randomPhoto-placeholder1').attr('src', url).animate({
+                opacity: self.config.opacity
+            }, self.config.animationSpeed, function() {
+                $(this).attr('id', 'randomPhoto-placeholder2');
+            });
+
+            $('#randomPhoto-placeholder2').animate({
+                opacity: 0
+            }, self.config.animationSpeed, function() {
+                $(this).attr('id', 'randomPhoto-placeholder1');
+            });
+        });
+    },
+
     returnImageFromList: function() {
         var indexToFetch = this.currentImageIndex;
         const imageList = this.imageList;
 
         if (this.config.random) {
+            Log.info("[" + this.name + "] -- DEBUG -- will fetch a random image");
             indexToFetch = Math.floor(Math.random() * imageList.length);
         }
         var imageSource = imageList[indexToFetch];
-        console.log(indexToFetch, imageSource);
+        Log.info(indexToFetch, imageSource);
+        //console.log(indexToFetch, imageSource);
 
         // If we are not doing it random, increase the index counter
         if (!this.config.random) {
@@ -152,78 +183,6 @@ Module.register("MMM-RandomPhoto",{
             this.currentImageIndex = indexToFetch;
         }
         return imageSource;
-    },
-
-    retrieveImageBehindBasicAuth: function(passedImageUrl) {
-        var self = this;
-        var basicAuth = btoa(self.config.repositoryConfig.username + ":" + self.config.repositoryConfig.password);
-        Log.log("[" + self.name + "] -- DEBUG -- passedImageUrl: " + passedImageUrl);
-        Log.log("[" + self.name + "] -- DEBUG -- basicAuth: " + basicAuth);
-
-        /**
-        const request = new Request(passedImageUrl, {
-            method: "GET",
-            headers: {
-                "Authorization": "Basic " + basicAuth,
-            },
-            mode: "cors"
-        });
-
-        fetch(request)
-            .then(response => {
-                console.log("[" + self.name + "] Got response: " + response);
-                return response;
-            })
-            .catch(err => {
-                console.log("[" + this.name + "] ERROR: " + err);
-                return false;
-            });
-        **/
-        /**
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Authorization": "Basic " + basicAuth,
-            }
-        };
-
-        https.get(passedImageUrl, requestOptions, function(response) {
-            var body = "";
-            response.on("data", function(data) {
-                body += data;
-            });
-            response.on("end", function() {
-                console.log("[" + self.name + "] Got response: " + body);
-                return body;
-            });
-        })
-        .on("error", function(err) {
-            console.log("[" + this.name + "] ERROR: " + err);
-            return false;
-        });
-        **/
-        
-        jQuery.ajax({
-            method: "GET",
-            url: passedImageUrl,
-            dataType: "image/jpg",
-            crossDomain: false,
-            headers: {
-                "Authorization": "Basic " + basicAuth
-            },
-            //beforeSend: function (xhr) {
-            //    xhr.setRequestHeader ("Authorization", "Basic " + btoa(self.config.repositoryConfig.username + ":" + self.config.repositoryConfig.password));
-            //},
-        })
-        .done(function (data) {
-            Log.log("[" + self.name + "] -- DEBUG -- Got data: " + data);
-            return "data:image/png;base64," + data;
-        })
-        .fail(function( jqXHR, textStatus ) {
-            Log.error("[" + self.name + "] Request failed: " + textStatus);
-            console.dir(jqXHR);
-            return false;
-        });
     },
 
     loadIcon: function() {
@@ -249,7 +208,29 @@ Module.register("MMM-RandomPhoto",{
     getDom: function() {
         var wrapper = document.createElement("div");
         wrapper.id = "randomPhoto";
-        wrapper.innerHTML = '<img id="randomPhoto-placeholder1" /><img id="randomPhoto-placeholder2" />';
+
+        var img1 = document.createElement("img");
+        img1.id = "randomPhoto-placeholder1";
+        var img2 = document.createElement("img");
+        img2.id = "randomPhoto-placeholder2";
+
+        // Only apply grayscale / blur css classes if we are NOT using picsum, as picsum is doing it via URL parameters
+        if (this.nextcloud || this.localdirectory) {
+            if (this.config.grayscale) {
+                img1.classList.add("grayscale");
+                img2.classList.add("grayscale");
+            }
+            if (this.config.blur) {
+                img1.classList.add("blur");
+                img2.classList.add("blur");
+                img1.style.setProperty("--blur-value", this.config.blurAmount + "px");
+                img2.style.setProperty("--blur-value", this.config.blurAmount + "px");
+            }
+        }
+
+        wrapper.appendChild(img1);
+        wrapper.appendChild(img2);
+        //wrapper.innerHTML = '<img id="randomPhoto-placeholder1" /><img id="randomPhoto-placeholder2" />';
         if (this.config.showStatusIcon) {
             var validatePosition = ['top_right', 'top_left', 'bottom_right', 'bottom_left'];
             if (validatePosition.indexOf(this.config.statusIconPosition) === -1) {
@@ -285,8 +266,8 @@ Module.register("MMM-RandomPhoto",{
             if (this.config.startHidden) {
                 this.hide();
             } else {
-                if (this.config.imageRepository !== "nextcloud") {
-                    // only start "right away" if we display "picsum" images. Otherwise wait until we receive the "NEXTCLOUD_IMAGE_LIST" socketNotification
+                if (!this.nextcloud && !this.localdirectory) {
+                    // only start "right away" if we display "picsum" images. Otherwise wait until we receive the "IMAGE_LIST" socketNotification
                     this.resumeImageLoading();
                 }
             }
@@ -312,7 +293,9 @@ Module.register("MMM-RandomPhoto",{
     },
 
     socketNotificationReceived: function(notification, payload) {
-        if (notification === "NEXTCLOUD_IMAGE_LIST") {
+        Log.log("["+ this.name + "] received a '" + notification + "' with payload: " + payload);
+        console.dir(payload);
+        if (notification === "IMAGE_LIST") {
             this.imageList = payload;
             // After we now received the image list, go ahead and display them
             this.resumeImageLoading();
