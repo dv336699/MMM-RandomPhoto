@@ -172,8 +172,10 @@ Module.register("MMM-RandomPhoto",{
         const imageList = this.imageList;
 
         if (this.config.random) {
-            Log.info("[" + this.name + "] -- DEBUG -- will fetch a random image");
-            indexToFetch = Math.floor(Math.random() * imageList.length);
+            //Log.info("[" + this.name + "] -- DEBUG -- will fetch a random image");
+            do {
+                indexToFetch = Math.floor(Math.random() * imageList.length);
+            } while (imageList.length > 1 && indexToFetch === this.currentImageIndex);
         } else {
             if (mode === "previous") {
                 indexToFetch--;
@@ -186,11 +188,10 @@ Module.register("MMM-RandomPhoto",{
                     indexToFetch = 0;
                 }
             }
-            this.currentImageIndex = indexToFetch;
         }
         var imageSource = imageList[indexToFetch];
         Log.info(indexToFetch, imageSource);
-        //console.log(indexToFetch, imageSource);
+        this.currentImageIndex = indexToFetch;
 
         return imageSource;
     },
