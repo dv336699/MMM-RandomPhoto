@@ -32,7 +32,8 @@ Module.register("MMM-RandomPhoto",{
         grayscale: false,
         blur: false,
         blurAmount: 1, // between 1 and 10
-        startHidden: false,
+        startHidden: false, // helpful if you use it as a screensaver and only want to show it f.e. after a specific time or with a specific touch gesture
+        startPaused: false, // start in "paused" mode -> automatic image loading is paused
         showStatusIcon: true,
         statusIconMode: "show", // one of: "show" (default / fallback) or "fade"
         statusIconPosition: "top_right", // one of: "top_right" (default / fallback), "top_left", "bottom_right" or "bottom_left"
@@ -84,9 +85,13 @@ Module.register("MMM-RandomPhoto",{
         }
     },
 
-    resumeImageLoading: function() {
+    resumeImageLoading: function(respectPausedState) {
         if (!this.running) {
-            this.running = true;
+            if (respectPausedState && this.config.startPaused) {
+                this.running = false;
+            } else {
+                this.running = true;
+            }
             this.load();
             if (this.config.showStatusIcon) {
                 this.loadIcon();
@@ -268,7 +273,7 @@ Module.register("MMM-RandomPhoto",{
             } else {
                 if (!this.nextcloud && !this.localdirectory) {
                     // only start "right away" if we display "picsum" images. Otherwise wait until we receive the "IMAGE_LIST" socketNotification
-                    this.resumeImageLoading();
+                    this.resumeImageLoading(true);
                 }
             }
         }
@@ -281,24 +286,26 @@ Module.register("MMM-RandomPhoto",{
             if (this.running) {
                 this.pauseImageLoading();
             } else {
-                this.resumeImageLoading();
+                this.resumeImageLoading(false);
             }
         }
         if (notification === "RANDOMPHOTO_PAUSE") {
             this.pauseImageLoading();
         }
         if (notification === "RANDOMPHOTO_RESUME") {
-            this.resumeImageLoading();
+            this.resumeImageLoading(false);
         }
     },
 
     socketNotificationReceived: function(notification, payload) {
-        Log.log("["+ this.name + "] received a '" + notification + "' with payload: " + payload);
-        console.dir(payload);
+        //Log.log("["+ this.name + "] received a '" + notification + "' with payload: " + payload);
+        //console.dir(payload);
         if (notification === "IMAGE_LIST") {
             this.imageList = payload;
-            // After we now received the image list, go ahead and display them
-            this.resumeImageLoading();
+            // After we now received the image list, go ahead and display them (only when not starting as hidden)
+            if(!this.config.startHidden) {
+                this.resumeImageLoading(true);
+            }
         }
     },
 
@@ -307,7 +314,7 @@ Module.register("MMM-RandomPhoto",{
     },
 
     resume: function() {
-        this.resumeImageLoading();
+        this.resumeImageLoading(true);
     }
 
 });
