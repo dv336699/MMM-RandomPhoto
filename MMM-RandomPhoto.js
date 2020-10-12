@@ -41,8 +41,8 @@ Module.register("MMM-RandomPhoto",{
 
     start: function() {
         this.updateTimer = null;
-        this.imageList = null; // used for nextcloud image url list
-        this.currentImageIndex = 0; // used for nextcloud image url list
+        this.imageList = null; // Used for nextcloud and localdirectory image list
+        this.currentImageIndex = -1; // Used for nextcloud and localdirectory image list
         this.running = false;
 
         this.nextcloud = false;
@@ -99,13 +99,13 @@ Module.register("MMM-RandomPhoto",{
         }
     },
 
-    load: function() {
+    load: function(mode="next") {
         var self = this;
         var url = "";
 
         if (self.localdirectory || self.nextcloud) {
             if (self.imageList && self.imageList.length > 0) {
-                url = "/" + this.name + "/images/" + this.returnImageFromList();
+                url = "/" + this.name + "/images/" + this.returnImageFromList(mode);
                 
                 jQuery.ajax({
                     method: "GET",
@@ -167,26 +167,31 @@ Module.register("MMM-RandomPhoto",{
         });
     },
 
-    returnImageFromList: function() {
+    returnImageFromList: function(mode) {
         var indexToFetch = this.currentImageIndex;
         const imageList = this.imageList;
 
         if (this.config.random) {
             Log.info("[" + this.name + "] -- DEBUG -- will fetch a random image");
             indexToFetch = Math.floor(Math.random() * imageList.length);
+        } else {
+            if (mode === "previous") {
+                indexToFetch--;
+                if (indexToFetch < 0) {
+                    indexToFetch = (imageList.length - 1);
+                }
+            } else {
+                indexToFetch++;
+                if (indexToFetch >= imageList.length) {
+                    indexToFetch = 0;
+                }
+            }
+            this.currentImageIndex = indexToFetch;
         }
         var imageSource = imageList[indexToFetch];
         Log.info(indexToFetch, imageSource);
         //console.log(indexToFetch, imageSource);
 
-        // If we are not doing it random, increase the index counter
-        if (!this.config.random) {
-            indexToFetch++;
-            if (indexToFetch >= imageList.length) {
-                indexToFetch = 0;
-            }
-            this.currentImageIndex = indexToFetch;
-        }
         return imageSource;
     },
 
@@ -281,6 +286,13 @@ Module.register("MMM-RandomPhoto",{
             // Don't call the pause or resume functions here, so we can actually work with both states ("paused" and "active"), so independent of what "this.running" is set to
             clearTimeout(this.updateTimer);
             this.load();
+        }
+        if (notification === "RANDOMPHOTO_PREVIOUS") {
+            // Only allow this if we are NOT in random mode and NOT use picsum as a source
+            if (!this.config.random && (this.nextcloud || this.localdirectory)) {
+                clearTimeout(this.updateTimer);
+                this.load("previous");
+            }
         }
         if (notification === "RANDOMPHOTO_TOGGLE") {
             if (this.running) {
