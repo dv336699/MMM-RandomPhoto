@@ -196,23 +196,97 @@ Module.register("MMM-RandomPhoto",{
         return imageSource;
     },
 
-    loadIcon: function() {
-        var pauseIcon = document.getElementById("randomPhotoIconPause");
-        var playIcon = document.getElementById("randomPhotoIconPlay");
-        if (this.running) {
-            pauseIcon.classList.add("hidden");
-            playIcon.classList.remove("hidden");
-            if (this.config.statusIconMode === "fade") {
-                pauseIcon.classList.remove("fading");
-                playIcon.classList.add("fading");
-            }
+    loadIcon: function(navigate="none") {
+        var self = this;
+        const statusIcon = document.getElementById("randomPhotoStatusIcon");
+
+        let currentIndex = -1;
+        let iconloadInProgress = false;
+
+        // Animation stuff
+        const animationSteps = [];
+        const animateToNextState = () => {
+            requestAnimationFrame( () => {
+                currentIndex++;
+                if (currentIndex < animationSteps.length) {
+                    animationSteps[currentIndex]();
+                    //console.log("animateToNextState(): " + animationSteps[currentIndex].toString());
+                }
+            });
+        };
+        const cleanupAnimation = () => {
+            statusIcon.style.animation = null;
+            iconloadInProgress = false;
+        }
+
+        // MutationObserver to listen to class change events
+        const attrObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mu => {
+                if (mu.attributeName === "class" && iconloadInProgress) {
+                    animateToNextState();
+                }
+            });
+        });
+        attrObserver.observe(statusIcon, { attributes: true });
+
+        // Eventlistener to listen to animation end events
+        statusIcon.addEventListener("animationend", () => {
+            animateToNextState();
+        });
+
+        // Some helper strings for fontawsome icons
+        var translateStatus = "";
+        if (self.running) {
+            translateStatus = "play"
         } else {
-            playIcon.classList.add("hidden");
-            pauseIcon.classList.remove("hidden");
-            if (this.config.statusIconMode === "fade") {
-                playIcon.classList.remove("fading");
-                pauseIcon.classList.add("fading");
+            translateStatus = "pause"
+        }
+
+        // If we used the "next" / "previous" notifications
+        if (navigate != "none") {
+            if (!statusIcon.classList.contains("rpihidden")) {
+                animationSteps.push(
+                    () => statusIcon.style.animation = "fadeOut 1s",
+                );
             }
+            animationSteps.push(
+                () => statusIcon.className = "far fa-arrow-alt-circle-" + navigate + " rpihidden",
+                () => statusIcon.style.animation = "fadeInAndOut 4s",
+                () => statusIcon.className = "far fa-" + translateStatus + "-circle rpihidden",
+            );
+            if (self.config.statusIconMode != "fade") {
+                animationSteps.push(
+                    () => statusIcon.style.animation = "fadeIn 1s",
+                    () => statusIcon.classList.remove("rpihidden"),
+                );
+            }
+            animationSteps.push(
+                () => cleanupAnimation()
+            );
+            iconloadInProgress = true;
+            animateToNextState();
+        } else {
+            if (!statusIcon.classList.contains("rpihidden")) {
+                animationSteps.push(
+                    () => statusIcon.style.animation = "fadeOut 1s",
+                );
+            }
+            animationSteps.push(
+                () => statusIcon.className = "far fa-" + translateStatus + "-circle rpihidden",
+                () => statusIcon.style.animation = "fadeIn 1s",
+                () => statusIcon.classList.remove("rpihidden"),
+            );
+            if (self.config.statusIconMode === "fade") {
+                animationSteps.push(
+                    () => statusIcon.style.animation = "fadeOut 4s",
+                    () => statusIcon.classList.add("rpihidden"),
+                );
+            }
+            animationSteps.push(
+                () => cleanupAnimation()
+            );
+            iconloadInProgress = true;
+            animateToNextState();
         }
     },
 
@@ -253,7 +327,7 @@ Module.register("MMM-RandomPhoto",{
             this.config.statusIconPosition.split("_").forEach(function(extractedName) {
                 statusIconObject.classList.add("rpi" + extractedName);
             });
-            statusIconObject.innerHTML = '<i id="randomPhotoIconPause" class="fa fa-pause-circle hidden"></i><i id="randomPhotoIconPlay" class="fa fa-play-circle hidden"></i>';
+            statusIconObject.innerHTML = '<i id="randomPhotoStatusIcon" class="rpihidden"></i>';
             wrapper.appendChild(statusIconObject);
         }
         return wrapper;
@@ -287,12 +361,18 @@ Module.register("MMM-RandomPhoto",{
             // Don't call the pause or resume functions here, so we can actually work with both states ("paused" and "active"), so independent of what "this.running" is set to
             clearTimeout(this.updateTimer);
             this.load();
+            if (this.config.showStatusIcon) {
+                this.loadIcon("right");
+            }
         }
         if (notification === "RANDOMPHOTO_PREVIOUS") {
             // Only allow this if we are NOT in random mode and NOT use picsum as a source
             if (!this.config.random && (this.nextcloud || this.localdirectory)) {
                 clearTimeout(this.updateTimer);
                 this.load("previous");
+                if (this.config.showStatusIcon) {
+                    this.loadIcon("left");
+                }
             }
         }
         if (notification === "RANDOMPHOTO_TOGGLE") {
