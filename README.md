@@ -29,8 +29,8 @@ The entry in `config.js` can include the following options:
 | `imageRepository`     | *Optional* - The image source.<br><br>**Type:** `string`<br>**Allowed:** `picsum`, `nextcloud`, `localdirectory`<br>**Default:** `picsum`
 | `repositoryConfig`    | *Optional* - The configuration block for the selected image repository. See below.<br><br>**Type:** `Object`
 | `random`              | *Optional* - Should the images be shown at random? Has **NO** effect when `imageRepository` is set to `picsum`, as it is forced there.<br><br>**Type:** `boolean`<br>**Default:** `true`
-| `width`               | *Optional* - The width of the image in px.<br><br>**Type:** `int`<br>**Default:** `1920`
-| `height`              | *Optional* - The height of the image in px.<br><br>**Type:** `int`<br>**Default:** `1080`
+| `width`               | *Optional* - The width of the image in px. Only used when `imageRepository` is set to `picsum`<br><br>**Type:** `int`<br>**Default:** `1920`
+| `height`              | *Optional* - The height of the image in px. Only used when `imageRepository` is set to `picsum`<br><br>**Type:** `int`<br>**Default:** `1080`
 | `grayscale`           | *Optional* - Should the image be grayscaled? <br><br>**Type:** `boolean`<br>**Default:** `false`
 | `blur`                | *Optional* - Should the image be blurred? <br><br>**Type:** `boolean`<br>**Default:** `false`
 | `blurAmount`          | *Optional* - If you want to blur it, how much?<br><br>**Type:** `int`<br>**Allowed:** minimum: `0`, maximum: `10`<br>Default `1`
@@ -47,9 +47,9 @@ Options for `repositoryConfig` - [more information](https://github.com/skuethe/M
 
 | Option                | Description
 |-----------------------|------------
-| `path`                | *Required* - Path / URL to fetch images from.<br>- if `imageRepository` is set to `picsum` it is **ignored**<br>- if `imageRepository` is set to `nextcloud` it has to point to your nextcloud instance's specific share path<br>- if `imageRepository` is set to `localdirectory` it has to point to a local Path<br><br>**Type:** `string`<br>**Default:** `https://picsum.photos/`
-| `username`            | *Required* - The username if images require basic authentication (f.e. nextcloud).<br><br>**Type:** `string`<br>**Default:** ``
-| `password`            | *Required* - The password if images require basic authentication (f.e. nextcloud).<br><br>**Type:** `string`<br>**Default:** ``
+| `path`                | *Required for nextcloud and localdirectory* - Path / URL to fetch images from.<br>- if `imageRepository` is set to `picsum` it is **ignored**<br>- if `imageRepository` is set to `nextcloud` it has to point to your nextcloud instance's specific share path<br>- if `imageRepository` is set to `localdirectory` it has to point to a local Path<br><br>**Type:** `string`<br>**Default:** `https://picsum.photos/`
+| `username`            | *Required for nextcloud with basic auth* - The username if images require basic authentication.<br><br>**Type:** `string`<br>**Default:** ``
+| `password`            | *Required for nextcloud with basic auth* - The password if images require basic authentication.<br><br>**Type:** `string`<br>**Default:** ``
 
 Here are some examples for entries in `config.js`
 
