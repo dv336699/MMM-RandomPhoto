@@ -1,5 +1,5 @@
 :root {
-    --blur-value: 0px;
+    --randomphoto-blur-value: 0px;
 }
 
 #randomPhoto img {
@@ -17,7 +17,7 @@
 }
 
 #randomPhoto img.blur {
-    filter: blur(var(--blur-value));
+    filter: blur(var(--randomphoto-blur-value));
 }
 
 #randomPhotoIcon {

@@ -251,7 +251,7 @@ Module.register("MMM-RandomPhoto",{
             }
             animationSteps.push(
                 () => statusIcon.className = "far fa-arrow-alt-circle-" + navigate + " rpihidden",
-                () => statusIcon.style.animation = "fadeInAndOut 4s",
+                () => statusIcon.style.animation = "fadeInAndOut 2s",
                 () => statusIcon.className = "far fa-" + translateStatus + "-circle rpihidden",
             );
             if (self.config.statusIconMode != "fade") {
@@ -308,8 +308,8 @@ Module.register("MMM-RandomPhoto",{
             if (this.config.blur) {
                 img1.classList.add("blur");
                 img2.classList.add("blur");
-                img1.style.setProperty("--blur-value", this.config.blurAmount + "px");
-                img2.style.setProperty("--blur-value", this.config.blurAmount + "px");
+                img1.style.setProperty("--randomphoto-blur-value", this.config.blurAmount + "px");
+                img2.style.setProperty("--randomphoto-blur-value", this.config.blurAmount + "px");
             }
         }
 
