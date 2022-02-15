@@ -40,10 +40,8 @@ module.exports = NodeHelper.create({
         }
     },
 
-    fetchLocalImageList: function() {
+    fetchLocalImageDirectory: function(path) {
         var self = this;
-        var imageList = [];
-        var path = self.config.repositoryConfig.path;
 
         // Validate path
         if (!fs.existsSync(path)) {
@@ -56,13 +54,24 @@ module.exports = NodeHelper.create({
             for (var f = 0; f < fileList.length; f++) {
                 if (fileList[f].isFile()) {
                     //TODO: add mime type check here
-                    imageList.push(fileList[f].name);
+                    self.imageList.push(path + "/" + fileList[f].name);
+                }
+                if ((self.config.repositoryConfig.recursive === true) && fileList[f].isDirectory()) {		
+                    self.fetchLocalImageDirectory(path + "/" + fileList[f].name);
                 }
             }
-            this.imageList = imageList;
-            self.sendSocketNotification("IMAGE_LIST", imageList);
             return;
         }
+    },
+
+    fetchLocalImageList: function() {
+        var self = this;
+        var path = self.config.repositoryConfig.path;
+
+        self.imageList = [];
+    	self.fetchLocalImageDirectory(path);
+
+        self.sendSocketNotification("IMAGE_LIST", self.imageList);
         return false;
     },
 
@@ -111,7 +120,7 @@ module.exports = NodeHelper.create({
     fetchEncodedImage: async function(passedImageName) {
         var self = this;
         return new Promise(function(resolve, reject) {
-            var fullImagePath = self.config.repositoryConfig.path + passedImageName;
+            var fullImagePath = passedImageName;
 
             // Local files
             if (self.localdirectory) {
