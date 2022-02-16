@@ -25,6 +25,7 @@ Module.register("MMM-RandomPhoto",{
             path: "https://picsum.photos/",
             username: "",
             password: "",
+            recursive: false,
         },
         width: 1920,
         height: 1080,

@@ -50,6 +50,7 @@ Options for `repositoryConfig` - [more information](https://github.com/skuethe/M
 | `path`                | *Required for nextcloud and localdirectory* - Path / URL to fetch images from.<br>- if `imageRepository` is set to `picsum` it is **ignored**<br>- if `imageRepository` is set to `nextcloud` it has to point to your nextcloud instance's specific share path<br>- if `imageRepository` is set to `localdirectory` it has to point to a local Path<br><br>**Type:** `string`<br>**Default:** `https://picsum.photos/`
 | `username`            | *Required for nextcloud with basic auth* - The username if images require basic authentication.<br><br>**Type:** `string`<br>**Default:** ``
 | `password`            | *Required for nextcloud with basic auth* - The password if images require basic authentication.<br><br>**Type:** `string`<br>**Default:** ``
+| `recursive`           | *Optional for localdirectory* - Search recursive for images in path.<br><br>**Type:** `boolean`<br>**Default:** `false`
 
 Here are some examples for entries in `config.js`
 
@@ -106,6 +107,7 @@ Here are some examples for entries in `config.js`
         imageRepository: "localdirectory",
         repositoryConfig: {
             path: "/home/USER/pictures/background/",
+            recursive: true,
         },
     }
 },
