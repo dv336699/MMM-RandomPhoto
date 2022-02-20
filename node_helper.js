@@ -136,7 +136,7 @@ module.exports = NodeHelper.create({
                         "Authorization": "Basic " + new Buffer.from(self.config.repositoryConfig.username + ":" + self.config.repositoryConfig.password).toString("base64")
                     }
                 };
-                https.get(fullImagePath, requestOptions, (response) => {
+                https.get(self.config.repositoryConfig.path + fullImagePath, requestOptions, (response) => {
                     response.setEncoding('base64');
                     var fileEncoded = "data:" + response.headers["content-type"] + ";base64,";
                     response.on("data", (data) => { fileEncoded += data; });
